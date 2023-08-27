@@ -157,6 +157,9 @@ app.post('/',(req, res) => {
               });
           });
         }
+        else{
+          return res.send({loggedIn: false});
+        }
       })
       .catch(err => {
         //handle error
