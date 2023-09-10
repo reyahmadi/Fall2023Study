@@ -1,3 +1,4 @@
+var db = require('./variable')
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -9,7 +10,6 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
 var app = express();
-
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -58,11 +58,11 @@ const quantile = (arr, q) => {
 
 const mariadb = require('mariadb');
 const pool = mariadb.createPool({
-  host: 'localhost', 
-  user: 'root', 
-  password: '1234', 
-  database: 'dashboard',
-  port: 3307,
+  host: db.DB_HOST, 
+  user: db.DB_USER, 
+  password: db.DB_PASS, 
+  database: db.DB_NAME,
+  port: db.DB_PORT,
   connectionLimit: 5});
 
 
