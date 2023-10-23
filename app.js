@@ -99,6 +99,18 @@ app.post('/',(req, res) => {
       .then((rows) => {
         console.log(rows); 
         if(rows.length){
+          var hasVisited = false;
+          var sql = "SELECT * FROM log where student_number = ? and visit_time > '2023-10-19'";
+          conn.query(sql, [req.body.student_number])
+          .then((visited) =>{
+            if(visited.length){
+              hasVisited = true;
+            }
+          })          
+          .catch(err => {
+            console.log(err); 
+            conn.end();
+          })
           let group = rows[0].division;
           let insert_sql = "INSERT INTO LOG(visit_time, student_number) VALUES (?, ?)"
           conn.query(insert_sql, [new Date(), req.body.student_number]) 
@@ -170,13 +182,14 @@ app.post('/',(req, res) => {
 
                         console.log("result:", result);
                       }
-                      console.log({loggedIn: true, your_perf: {time: your_grade[0]['time'], grade: your_grade[0]['grade']}, peers: result})
+                      console.log({hasVisited: hasVisited, loggedIn: true, your_perf: {time: your_grade[0]['time'], grade: your_grade[0]['grade']}, peers: result})
                       return res.send({
                         loggedIn: true, 
                         group: "intervention", 
                         assignment_name: assignment_name,
                         your_perf: {time: your_grade[0]['time'], grade: your_grade[0]['grade']}, 
-                        peers: result
+                        peers: result,
+                        hasVisited: hasVisited
                       });
                     
 
@@ -192,6 +205,7 @@ app.post('/',(req, res) => {
                         group: "control",
                         assignment_name: assignment_name,
                         your_perf: your_grade[0]['grade'],
+                        hasVisited: hasVisited,
                         grades: [
                         grade_array[0], 
                         quantile(grade_array, .25), 
@@ -295,6 +309,22 @@ app.post('/',(req, res) => {
   //   }
 
   // })
+})
+
+app.post('/exit', (req, res) => {
+  pool.getConnection()
+  .then(conn => {
+          let insert_sql = "INSERT INTO LOG(visit_time, student_number, event) VALUES (?, ?, 'exit')"
+          conn.query(insert_sql, [new Date(), req.body.student_number]) 
+          .then((result) => {
+            return res.send({exit: true});
+          }
+          )
+          .catch(err => {
+            console.log(err); 
+            conn.end();
+          })
+    })
 })
 
 // catch 404 and forward to error handler
