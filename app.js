@@ -136,7 +136,7 @@ app.post('/',(req, res) => {
                   grade_query = "Select grade, time from comparator where assignment = ? and student_number = ? ";
                   conn.query(grade_query,[assignment_id, req.body.student_number]).then(
                     result => {
-
+                      conn.release()
                       return res.send({
                         loggedIn: true, 
                         group: "intervention", 
@@ -148,15 +148,22 @@ app.post('/',(req, res) => {
                       });
                     
 
+                  })          
+                  .catch(err => {
+                    console.log(err); 
+                    conn.end();
                   });
                   }
                 else{
                   grade_query = `
                   Select grade 
-                  from performance 
+                  from performance inner join student on performance.student_number = student.student_number
+                  where assignment = ? and class = ?
                   order by grade`;
-                  conn.query(grade_query, [assignment_id, rows[0].class[0]]).then(result => {
+                  conn.query(grade_query, [assignment_id, rows[0].class[0]])
+                  .then(result => {
                     let grade_array = result.map(g => g.grade);
+                    conn.release();
                     return res.send(
                       {
                         loggedIn: true,
@@ -173,12 +180,17 @@ app.post('/',(req, res) => {
                         grade_array[grade_array.length - 1]
                       ]});
 
+                  })          
+                  .catch(err => {
+                    console.log(err); 
+                    conn.end();
                   });
                 }
               });
           });
         }
         else{
+          conn.release();
           return res.send({loggedIn: false});
         }
       })
@@ -187,87 +199,11 @@ app.post('/',(req, res) => {
         console.log(err); 
         conn.end();
       })
-      
   }).catch(err => {
     //not connected
+
   });
 
-
-
-
-
-
-
-
-
-
-  // // let data = req.body;
-  // // res.send('Data Received: ' + JSON.stringify(data));
-  // var sql = "SELECT * FROM ?? WHERE ?? = ?";
-  // sql = mysql.format(sql, ['student', 'student_number', req.body.student_number])
-  // connection.query(sql, (err, rows, fields) => {
-  //   if (err) throw err
-  //   if(rows.length){
-  //     let group = rows[0].division;
-  //     let insert_sql = "INSERT INTO LOG(visit_time, student_number) VALUES (?, ?)"
-  //     insert_sql = mysql.format(insert_sql, [new Date(), req.body.student_number]);
-  //     connection.query(insert_sql, (err, rows, fields) => {
-  //       if (err) throw err
-  //     })
-  //     let assgn_query = "select max(id), name from assignment group by id;";
-  //     connection.query(assgn_query, (err, assignment, fields) => {
-  //       assignment_id = assignment[0]["max(id)"];
-  //       assignment_name = assignment[0]['name'];
-  //       let grade_query = "select * from performance where assignment = ? and student_number = ?";
-  //       grade_query = mysql.format(grade_query, [assignment_id, Number(req.body.student_number)]);
-  //         connection.query(grade_query, (err, your_grade, fields) => {
-  //           if(rows[0].division === "intervention"){
-
-  //             console.log(assignment_id);
-  //             grade_query = "Select * from performance where assignment = ? and time >= ? and grade >= ? and student_number!= ?";
-  //             grade_query = mysql.format(grade_query, [assignment_id, your_grade[0]['time'], your_grade[0]['grade'], req.body.student_number]);
-  //             grades = connection.query(grade_query, (err, result, fields) => {
-  //               console.log({loggedIn: true, your_perf: {time: your_grade[0]['time'], grade: your_grade[0]['grade']}, peers: result})
-  //               return res.send({
-  //                 loggedIn: true, 
-  //                 group: group, 
-  //                 assignment_name: assignment_name,
-  //                 your_perf: {time: your_grade[0]['time'], grade: your_grade[0]['grade']}, 
-  //                 peers: result});
-  //             });
-  //             }
-  //           else{
-  //             grade_query = "Select grade from performance where assignment = ? order by grade";
-  //             grade_query = mysql.format(grade_query, [assignment_id]);
-  //             grades = connection.query(grade_query, (err, result, fields) => {
-  //               let grade_array = result.map(g => g.grade);
-  //               return res.send(
-  //                 {
-  //                   loggedIn: true,
-  //                   group: group,
-  //                   assignment_name: assignment_name,
-  //                   your_perf: your_grade[0]['grade'],
-  //                   grades: [
-  //                   grade_array[0], 
-  //                   quantile(grade_array, .25), 
-  //                   mean(grade_array), 
-  //                   quantile(grade_array, .75), 
-  //                   grade_array[grade_array.length - 1]
-  //                 ]});
-
-  //             });
-  //           }
-  //         });
-
-
-  //     })
-
-  //   }
-  //   else{
-  //     return res.send({loggedIn: false});
-  //   }
-
-  // })
 })
 
 app.post('/exit', (req, res) => {
@@ -276,6 +212,7 @@ app.post('/exit', (req, res) => {
           let insert_sql = "INSERT INTO log(visit_time, student_number, event) VALUES (?, ?, 'exit')"
           conn.query(insert_sql, [new Date(), req.body.student_number]) 
           .then((result) => {
+            conn.release();
             return res.send({exit: true});
           }
           )
@@ -283,7 +220,11 @@ app.post('/exit', (req, res) => {
             console.log(err); 
             conn.end();
           })
+
+    }).catch(err => {
+      console.log(err); 
     })
+
 })
 
 // catch 404 and forward to error handler
