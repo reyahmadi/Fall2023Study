@@ -112,7 +112,7 @@ app.post('/',(req, res) => {
             conn.end();
           })
           let group = rows[0].division;
-          let insert_sql = "INSERT INTO LOG(visit_time, student_number) VALUES (?, ?)"
+          let insert_sql = "INSERT INTO log(visit_time, student_number) VALUES (?, ?)"
           conn.query(insert_sql, [new Date(), req.body.student_number]) 
           .then()
           .catch(err => {
@@ -314,7 +314,7 @@ app.post('/',(req, res) => {
 app.post('/exit', (req, res) => {
   pool.getConnection()
   .then(conn => {
-          let insert_sql = "INSERT INTO LOG(visit_time, student_number, event) VALUES (?, ?, 'exit')"
+          let insert_sql = "INSERT INTO log(visit_time, student_number, event) VALUES (?, ?, 'exit')"
           conn.query(insert_sql, [new Date(), req.body.student_number]) 
           .then((result) => {
             return res.send({exit: true});
