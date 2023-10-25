@@ -133,71 +133,30 @@ app.post('/',(req, res) => {
                 if(rows[0].division?.[0] === 'intervention'){
 
                   console.log(assignment_id);
-                  grade_query = "Select grade, time from performance where assignment = ? and time >= ? and grade >= ? and student_number!= ? limit 6";
-                  conn.query(grade_query,[assignment_id, your_grade[0]['time'], your_grade[0]['grade'], req.body.student_number]).then(
+                  grade_query = "Select grade, time from comparator where assignment = ? and student_number = ? ";
+                  conn.query(grade_query,[assignment_id, req.body.student_number]).then(
                     result => {
-                      if(result.length < 6){
-                        conn.query("select * from fake_student where student_number = ? and assignment = ?", [req.body.student_number, assignment_id])
-                        .then(fakeStudents => {
-                          if(fakeStudents.length){
-                            result = result.concat(fakeStudents);
-                          }
-                          else{
-                            let fake_count = 6 - result.length;
-                            let fake_students = [];
-                            for(let i = 0; i < fake_count; i++){
-                              let fake_grade = your_grade[0]['grade'];
-                              let fake_time = your_grade[0]['time'];
-                              let added_grade = 0;
-                               if(fake_time > 30){
-                                fake_time += Math.floor(Math.random() * 3);
-                                added_grade = Math.floor(Math.random() * 10);
-                               }
-                               else if (fake_time > 20 && fake_time <= 30){
-                                fake_time += Math.floor(Math.random() * 3) + 3;
-                                added_grade = Math.floor(Math.random() * 10) + 5;
-                               }
-                               else if(fake_time > 10 && fake_time <= 20){
-                                fake_time += Math.floor(Math.random() * 5) + 3;
-                                added_grade = Math.floor(Math.random() * 15) + 5;
-                               }
-                               else{
-                                fake_time += Math.floor(Math.random() * 5) + 5;
-                                added_grade = Math.floor(Math.random() * 20) + 5;
-                               }
-    
-                               fake_grade += (fake_grade + added_grade > 100 ? 100 - fake_grade : added_grade)
-                               result.push(
-                                {
-                                  grade: fake_grade,
-                                  time: fake_time
-                                }
-                               )
-                            }
 
-                            
-                          }
-                        })
-
-
-                        console.log("result:", result);
-                      }
-                      console.log({hasVisited: hasVisited, loggedIn: true, your_perf: {time: your_grade[0]['time'], grade: your_grade[0]['grade']}, peers: result})
                       return res.send({
                         loggedIn: true, 
                         group: "intervention", 
                         assignment_name: assignment_name,
                         your_perf: {time: your_grade[0]['time'], grade: your_grade[0]['grade']}, 
                         peers: result,
-                        hasVisited: hasVisited
+                        hasVisited: hasVisited,
+                        class: rows[0].class[0]
                       });
                     
 
                   });
                   }
                 else{
-                  grade_query = "Select grade from performance where assignment = ? order by grade";
-                  conn.query(grade_query, [assignment_id]).then(result => {
+                  grade_query = `
+                  Select grade 
+                  from performance inner join student on performance.student_number = student.student_number
+                  where assignment = ? and class = ?
+                  order by grade`;
+                  conn.query(grade_query, [assignment_id, rows[0].class[0]]).then(result => {
                     let grade_array = result.map(g => g.grade);
                     return res.send(
                       {
@@ -206,6 +165,7 @@ app.post('/',(req, res) => {
                         assignment_name: assignment_name,
                         your_perf: your_grade[0]['grade'],
                         hasVisited: hasVisited,
+                        class: rows[0].class[0],
                         grades: [
                         grade_array[0], 
                         quantile(grade_array, .25), 
