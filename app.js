@@ -153,8 +153,7 @@ app.post('/',(req, res) => {
                 else{
                   grade_query = `
                   Select grade 
-                  from performance inner join student on performance.student_number = student.student_number
-                  where assignment = ? and class = ?
+                  from performance 
                   order by grade`;
                   conn.query(grade_query, [assignment_id, rows[0].class[0]]).then(result => {
                     let grade_array = result.map(g => g.grade);
