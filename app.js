@@ -120,7 +120,7 @@ app.post('/',(req, res) => {
             conn.end();
           })
 
-          let assgn_query = "select max(id), name from assignment group by id;";
+          let assgn_query = "select max(id), name from assignment;";
           conn.query(assgn_query).then(
             assignment => {
           assignment_id = assignment[0]["max(id)"];
@@ -136,6 +136,7 @@ app.post('/',(req, res) => {
                   grade_query = "Select grade, time from comparator where assignment = ? and student_number = ? ";
                   conn.query(grade_query,[assignment_id, req.body.student_number]).then(
                     result => {
+                      console.log("*******\n", result,assignment_id, req.body.student_number);
                       conn.release()
                       return res.send({
                         loggedIn: true, 
@@ -162,6 +163,7 @@ app.post('/',(req, res) => {
                   order by grade`;
                   conn.query(grade_query, [assignment_id, rows[0].class[0]])
                   .then(result => {
+                    console.log("//////////\n", result);
                     let grade_array = result.map(g => g.grade);
                     conn.release();
                     return res.send(
