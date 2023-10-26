@@ -100,7 +100,7 @@ app.post('/',(req, res) => {
         console.log(rows); 
         if(rows.length){
           var hasVisited = false;
-          var sql = "SELECT * FROM log where student_number = ? and visit_time > '2023-10-19'";
+          var sql = "SELECT * FROM log where student_number = ? and event = 'exit'";
           conn.query(sql, [req.body.student_number])
           .then((visited) =>{
             if(visited.length){
