@@ -25,16 +25,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // app.use('/users', usersRouter);
 
 const corsOptions ={
-  origin: '*',
-
-  methods: [
-    'GET',
-    'POST',
-  ],
-
-  allowedHeaders: [
-    'Content-Type',
-  ],
+  origin:'http://206.12.7.97:8080/', 
+  credentials:true,            //access-control-allow-credentials:true
+  optionSuccessStatus:200
 }
 
 app.use(cors(corsOptions));
