@@ -14,7 +14,6 @@ var app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-app.use(cors());
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -26,10 +25,20 @@ app.use(express.static(path.join(__dirname, 'public')));
 // app.use('/users', usersRouter);
 
 const corsOptions ={
-  origin:'http://localhost:3000', 
-  credentials:true,            //access-control-allow-credentials:true
-  optionSuccessStatus:200
+  origin: '*',
+
+  methods: [
+    'GET',
+    'POST',
+  ],
+
+  allowedHeaders: [
+    'Content-Type',
+  ],
 }
+
+app.use(cors(corsOptions));
+
 
 const asc = arr => arr.sort((a, b) => a - b);
 
@@ -120,10 +129,10 @@ app.post('/',(req, res) => {
             conn.end();
           })
 
-          let assgn_query = "select max(id), name from assignment;";
+          let assgn_query = "select id, name from assignment where id = (select max(id) from assignment);";
           conn.query(assgn_query).then(
             assignment => {
-          assignment_id = assignment[0]["max(id)"];
+          assignment_id = assignment[0]["id"];
           assignment_name = assignment[0]['name'];
           let grade_query = "select * from performance where assignment = ? and student_number = ?";
           conn.query(grade_query,[assignment_id, Number(req.body.student_number)]).then(
@@ -163,7 +172,7 @@ app.post('/',(req, res) => {
                   order by grade`;
                   conn.query(grade_query, [assignment_id, rows[0].class[0]])
                   .then(result => {
-                    console.log("//////////\n", result);
+                    console.log("//////////\n", assignment_id, rows[0].class[0], result);
                     let grade_array = result.map(g => g.grade);
                     conn.release();
                     return res.send(
