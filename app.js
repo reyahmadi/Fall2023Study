@@ -21,16 +21,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// app.use('/', indexRouter);
-// app.use('/users', usersRouter);
 
-const corsOptions ={
-  origin:'http://206.12.7.97:8080/', 
-  credentials:true,            //access-control-allow-credentials:true
-  optionSuccessStatus:200
-}
-
-app.use(cors(corsOptions));
+app.use(cors());
 
 
 const asc = arr => arr.sort((a, b) => a - b);
