@@ -94,7 +94,11 @@ app.post('/',(req, res) => {
         console.log(rows); 
         if(rows.length){
           var hasVisited = false;
-          var sql = "SELECT * FROM log where student_number = ? and event = 'exit'";
+          var sql = 
+          `SELECT * 
+           FROM log inner join student on log.student_number = student.student_number
+           where student.student_number = ? and event = 'exit' and (class = "265" or (class="167" and visit_time > "2023-11-17 00:00:00"));
+            `;
           conn.query(sql, [req.body.student_number])
           .then((visited) =>{
             if(visited.length){
@@ -123,7 +127,12 @@ app.post('/',(req, res) => {
           conn.query(grade_query,[assignment_id, Number(req.body.student_number)]).then(
               your_grade => 
               {
-                console.log(rows[0].division, rows[0].division?.[0] === 'intervention')
+                if(your_grade.length == 0){
+                  return res.send(
+                    {
+                      message: "No data for " + assignment_name
+                    });
+                }
                 if(rows[0].division?.[0] === 'intervention'){
 
                   console.log(assignment_id);
