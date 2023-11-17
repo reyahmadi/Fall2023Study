@@ -118,8 +118,8 @@ app.post('/',(req, res) => {
             conn.end();
           })
 
-          let assgn_query = "select id, name from assignment where id = (select max(id) from assignment);";
-          conn.query(assgn_query).then(
+          let assgn_query = "select id, name from assignment where id = (select max(id) from assignment where class = ?);";
+          conn.query(assgn_query, [rows[0].class]).then(
             assignment => {
           assignment_id = assignment[0]["id"];
           assignment_name = assignment[0]['name'];
