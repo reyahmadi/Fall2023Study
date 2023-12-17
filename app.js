@@ -95,9 +95,9 @@ app.post('/',(req, res) => {
         if(rows.length){
           var hasVisited = false;
           var sql = 
-          `SELECT * 
+          `SELECT visit_time, log.student_number, event
            FROM log inner join student on log.student_number = student.student_number
-           where student.student_number = ? and event = 'exit' and (class = "265" or (class="167" and visit_time > "2023-11-17 00:00:00"));
+           where student.student_number = ? and event = 'exit' and (class = "265" or (class="167" and visit_time > "2023-11-17 11:00:00"));
             `;
           conn.query(sql, [req.body.student_number])
           .then((visited) =>{
@@ -110,21 +110,21 @@ app.post('/',(req, res) => {
             conn.end();
           })
           let group = rows[0].division;
-          let insert_sql = "INSERT INTO log(visit_time, student_number) VALUES (?, ?)"
-          conn.query(insert_sql, [new Date(), req.body.student_number]) 
-          .then()
-          .catch(err => {
-            console.log(err); 
-            conn.end();
-          })
+          // let insert_sql = "INSERT INTO log(visit_time, student_number) VALUES (?, ?)"
+          // conn.query(insert_sql, [new Date(), req.body.student_number]) 
+          // .then()
+          // .catch(err => {
+          //   console.log(err); 
+          //   conn.end();
+          // })
 
           let assgn_query = "select id, name from assignment where id = (select max(id) from assignment where class = ?);";
           conn.query(assgn_query, [rows[0].class]).then(
             assignment => {
           assignment_id = assignment[0]["id"];
           assignment_name = assignment[0]['name'];
-          let grade_query = "select * from performance where assignment = ? and student_number = ?";
-          conn.query(grade_query,[assignment_id, Number(req.body.student_number)]).then(
+          let grade_query = "select * from performance where student_number = ?";
+          conn.query(grade_query,[Number(req.body.student_number)]).then(
               your_grade => 
               {
                 if(your_grade.length == 0){
@@ -136,16 +136,16 @@ app.post('/',(req, res) => {
                 if(rows[0].division?.[0] === 'intervention'){
 
                   console.log(assignment_id);
-                  grade_query = "Select grade, time from comparator where assignment = ? and student_number = ? ";
-                  conn.query(grade_query,[assignment_id, req.body.student_number]).then(
+                  grade_query = "Select grade, time, comparator_number, assignment from comparator where student_number = ? ";
+                  conn.query(grade_query,[req.body.student_number]).then(
                     result => {
-                      console.log("*******\n", result,assignment_id, req.body.student_number);
+                      console.log("*******\n", req.body.student_number);
                       conn.release()
                       return res.send({
                         loggedIn: true, 
                         group: "intervention", 
                         assignment_name: assignment_name,
-                        your_perf: {time: your_grade[0]['time'], grade: your_grade[0]['grade']}, 
+                        your_perf: your_grade, 
                         peers: result,
                         hasVisited: hasVisited,
                         class: rows[0].class[0]
@@ -210,6 +210,27 @@ app.post('/',(req, res) => {
   });
 
 })
+
+app.post('/consent', (req, res) => {
+  pool.getConnection()
+  .then(conn => {
+          let insert_sql = "INSERT INTO consent(date, student_number, consent) VALUES (?, ?, ?)"
+          conn.query(insert_sql, [new Date(), req.body.student_number, req.body.consent]) 
+          .then((result) => {
+            conn.release();
+            return res.send({success: true});
+          }
+          )
+          .catch(err => {
+            console.log(err); 
+            conn.end();
+          })
+
+    }).catch(err => {
+      console.log(err); 
+    })
+})
+
 
 app.post('/exit', (req, res) => {
   pool.getConnection()
