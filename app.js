@@ -123,8 +123,8 @@ app.post('/',(req, res) => {
             assignment => {
           assignment_id = assignment[0]["id"];
           assignment_name = assignment[0]['name'];
-          let grade_query = "select * from performance where student_number = ?";
-          conn.query(grade_query,[Number(req.body.student_number)]).then(
+          let grade_query = "select * from performance where student_number = ? and assignment = ?";
+          conn.query(grade_query,[Number(req.body.student_number), assignment_id]).then(
               your_grade => 
               {
                 if(your_grade.length == 0){
@@ -136,8 +136,8 @@ app.post('/',(req, res) => {
                 if(rows[0].division?.[0] === 'intervention'){
 
                   console.log(assignment_id);
-                  grade_query = "Select grade, time, comparator_number, assignment from comparator where student_number = ? ";
-                  conn.query(grade_query,[req.body.student_number]).then(
+                  grade_query = "Select grade, time, comparator_number, assignment from comparator where assignment = ? and student_number = ? ";
+                  conn.query(grade_query,[assignment_id, req.body.student_number]).then(
                     result => {
                       console.log("*******\n", req.body.student_number);
                       conn.release()
